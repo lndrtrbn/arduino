@@ -19,3 +19,11 @@ src/simple_on_off_led/simple_on_off_led.ino
 Simple project to turn a LED on off.
 
 To see how to manage button state changes efficiently.
+
+## Reaction time
+
+```
+src/reaction_time/reaction_time.ino
+```
+
+Like batak mini but one button and no screen.
