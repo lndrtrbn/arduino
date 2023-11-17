@@ -1,4 +1,5 @@
-#include <LiquidCrystal_I2C.h>
+#include <Wire.h> 
+#include "rgb_lcd.h"
  
 // =======================================
 // Batak Mini - by Landry Trebon - 11/2023
@@ -6,15 +7,15 @@
 
 // CONSTANTS =============================
 
-const int NB_BUTTONS = 3;
+const int NB_BUTTONS = 4;
 
-const int PIN_LED_START = 9;
-const int PIN_BTN_START = 5;
+const int PIN_LED_START = 2;
+const int PIN_BTN_START = 8;
 
 const int BTN_SWITCH = PIN_BTN_START;
 const int BTN_VALIDATE = PIN_BTN_START + 1;
 
-const int GAME_DURATION = 10;
+const int GAME_DURATION = 20;
 const int NEW_LED_INTERVAL = 300;
 
 const int NB_MODES = 6;
@@ -31,11 +32,13 @@ const String MODE_NAMES[NB_MODES] = {
 // VARIABLES =============================
 
 int mode = -1;
-LiquidCrystal_I2C lcd(0x26, 16, 2);
+rgb_lcd lcd;
 
 // SETUP =================================
 
-void prepare() {  
+void prepare() { 
+  randomSeed(analogRead(0));
+
   int i = 0;
   while (i < NB_BUTTONS) {
     pinMode(PIN_BTN_START+i, INPUT);
@@ -44,8 +47,7 @@ void prepare() {
     i++;
   }
   
-  lcd.init();
-  lcd.backlight();
+  lcd.begin(16, 2);
   lcd.setCursor(0, 0);
   lcd.print("== BATAK MINI ==");
 }
@@ -73,6 +75,10 @@ void setup() {
   Serial.begin(9600);
   prepare();
   flashLed();
+  Serial.println("BTN_SWITCH");
+  Serial.println(BTN_SWITCH);
+  Serial.println("BTN_VALIDATE");
+  Serial.println(BTN_VALIDATE);
 }
 
 // LOOP ==================================
@@ -93,10 +99,12 @@ void gameMenu() {
     }
 
     if (digitalRead(BTN_SWITCH) == HIGH) {
+      Serial.println("SWITCH MODE");
       selectedMode = (mode + 1) % NB_MODES;
     }
 
     if (digitalRead(BTN_VALIDATE) == HIGH) {
+      Serial.println("START GAME");
       lcd.setCursor(0, 1);
       lcd.print("                ");
       break;
