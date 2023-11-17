@@ -1,4 +1,5 @@
-#include <Wire.h> 
+#include <Wire.h>
+#include <ezButton.h>
 #include "rgb_lcd.h"
  
 // =======================================
@@ -29,7 +30,26 @@ const String MODE_NAMES[NB_MODES] = {
   "Hard 0.2s"
 };
 
+const int PIN_LED_1 = 2;
+const int PIN_BTN_1 = 8;
+
+const int PIN_LED_2 = 3;
+const int PIN_BTN_2 = 9;
+
+const int PIN_LED_3 = 4;
+const int PIN_BTN_3 = 10;
+
+const int PIN_LED_4 = 5;
+const int PIN_BTN_4 = 11;
+
+const int DEBOUNCE = 50;
+
 // VARIABLES =============================
+
+ezButton button1(PIN_BTN_1);
+ezButton button2(PIN_BTN_2);
+ezButton button3(PIN_BTN_3);
+ezButton button4(PIN_BTN_4);
 
 int mode = -1;
 rgb_lcd lcd;
@@ -39,13 +59,21 @@ rgb_lcd lcd;
 void prepare() { 
   randomSeed(analogRead(0));
 
-  int i = 0;
-  while (i < NB_BUTTONS) {
-    pinMode(PIN_BTN_START+i, INPUT);
-  	pinMode(PIN_LED_START+i, OUTPUT);
-    digitalWrite(PIN_LED_START+i, HIGH);
-    i++;
-  }
+  button1.setDebounceTime(DEBOUNCE);
+  pinMode(PIN_LED_1, OUTPUT);
+  digitalWrite(PIN_LED_1, HIGH);
+
+  button2.setDebounceTime(DEBOUNCE);
+  pinMode(PIN_LED_2, OUTPUT);
+  digitalWrite(PIN_LED_2, HIGH);
+
+  button3.setDebounceTime(DEBOUNCE);
+  pinMode(PIN_LED_3, OUTPUT);
+  digitalWrite(PIN_LED_3, HIGH);
+
+  button4.setDebounceTime(DEBOUNCE);
+  pinMode(PIN_LED_4, OUTPUT);
+  digitalWrite(PIN_LED_4, HIGH);
   
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
@@ -53,21 +81,20 @@ void prepare() {
 }
 
 void flashLed() {
-  int j = 0;
-  while (j < 3) {
-    int i = 0;
-    while (i < NB_BUTTONS) {
-      digitalWrite(PIN_LED_START+i, LOW);
-      i++;
-    }
+  int i = 0;
+  while (i < 3) {
+    digitalWrite(PIN_LED_1, LOW);
+    digitalWrite(PIN_LED_2, LOW);
+    digitalWrite(PIN_LED_3, LOW);
+    digitalWrite(PIN_LED_4, LOW);
     delay(300);
-    i = 0;
-    while (i < NB_BUTTONS) {
-      digitalWrite(PIN_LED_START+i, HIGH);
-      i++;
-    }
+
+    digitalWrite(PIN_LED_1, HIGH);
+    digitalWrite(PIN_LED_2, HIGH);
+    digitalWrite(PIN_LED_3, HIGH);
+    digitalWrite(PIN_LED_4, HIGH);
     delay(200);
-    j++;
+    i++;
   }
 }
 
@@ -75,10 +102,6 @@ void setup() {
   Serial.begin(9600);
   prepare();
   flashLed();
-  Serial.println("BTN_SWITCH");
-  Serial.println(BTN_SWITCH);
-  Serial.println("BTN_VALIDATE");
-  Serial.println(BTN_VALIDATE);
 }
 
 // LOOP ==================================
@@ -98,19 +121,15 @@ void gameMenu() {
       lcd.print(MODE_NAMES[mode]);
     }
 
-    if (digitalRead(BTN_SWITCH) == HIGH) {
-      Serial.println("SWITCH MODE");
+    if (button2.isPressed()) {
       selectedMode = (mode + 1) % NB_MODES;
     }
 
-    if (digitalRead(BTN_VALIDATE) == HIGH) {
-      Serial.println("START GAME");
+    if (button1.isPressed()) {
       lcd.setCursor(0, 1);
       lcd.print("                ");
       break;
     }
-
-    delay(10);
   }
 }
 
@@ -150,17 +169,18 @@ void startGame() {
       digitalWrite(activeLed, LOW);
     }
     
-    int i = 0;
-    while (i < NB_BUTTONS) {
-      if (digitalRead(PIN_BTN_START + i) == HIGH && activeLed == PIN_LED_START + i) {
-        digitalWrite(activeLed, HIGH);
-        activeLed = 0;
-        lcd.setCursor(6, 1);
-        lcd.print(++score);
-        lastLedOff = now;
-        break;
-      }
-      i++;
+    if (
+      (button1.isPressed() && activeLed == PIN_LED_1) ||
+      (button2.isPressed() && activeLed == PIN_LED_2) ||
+      (button3.isPressed() && activeLed == PIN_LED_3) ||
+      (button4.isPressed() && activeLed == PIN_LED_4) ||
+    ) {
+      digitalWrite(activeLed, HIGH);
+      activeLed = 0;
+      lcd.setCursor(6, 1);
+      lcd.print(++score);
+      lastLedOff = now;
+      break;
     }
 
     if (MODES[mode] > 0 && now - lastLedOff > (MODES[mode] + NEW_LED_INTERVAL)) {
@@ -173,8 +193,6 @@ void startGame() {
       flashLed();
       break;
     }
-
-    delay(10);
   }
 }
 
@@ -183,17 +201,20 @@ void endGame() {
   lcd.print("Again?");
 
   while (1 == 1) {
-    if (digitalRead(BTN_VALIDATE) == HIGH) {
+    if (button1.isPressed()) {
       lcd.setCursor(0, 1);
       lcd.print("                ");
       break;
     }
-
-    delay(10);
   }
 }
 
 void loop() {
+  button1.loop();
+  button2.loop();
+  button3.loop();
+  button4.loop();
+
   gameMenu();
   startGame();
   endGame();
