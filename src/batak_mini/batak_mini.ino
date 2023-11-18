@@ -16,7 +16,7 @@ const int PIN_BTN_START = 8;
 const int BTN_SWITCH = PIN_BTN_START;
 const int BTN_VALIDATE = PIN_BTN_START + 1;
 
-const int GAME_DURATION = 20;
+const int GAME_DURATION = 30;
 const int NEW_LED_INTERVAL = 300;
 
 const int NB_MODES = 6;
@@ -113,6 +113,9 @@ void gameMenu() {
   lcd.print("Mode:");
 
   while (1 == 1) {
+    button1.loop();
+    button2.loop();
+
     if (selectedMode != mode) {
       mode = selectedMode;
       lcd.setCursor(6, 1);
@@ -121,11 +124,11 @@ void gameMenu() {
       lcd.print(MODE_NAMES[mode]);
     }
 
-    if (button2.isPressed()) {
+    if (button1.isPressed()) {
       selectedMode = (mode + 1) % NB_MODES;
     }
 
-    if (button1.isPressed()) {
+    if (button2.isPressed()) {
       lcd.setCursor(0, 1);
       lcd.print("                ");
       break;
@@ -153,6 +156,10 @@ void startGame() {
   unsigned long gameStart = millis();
 
   while (1 == 1) {
+    button1.loop();
+    button2.loop();
+    button3.loop();
+    button4.loop();
     now = millis();
   
     localTimeRemaining = GAME_DURATION - ((now - gameStart) / 1000);
@@ -173,14 +180,13 @@ void startGame() {
       (button1.isPressed() && activeLed == PIN_LED_1) ||
       (button2.isPressed() && activeLed == PIN_LED_2) ||
       (button3.isPressed() && activeLed == PIN_LED_3) ||
-      (button4.isPressed() && activeLed == PIN_LED_4) ||
+      (button4.isPressed() && activeLed == PIN_LED_4)
     ) {
       digitalWrite(activeLed, HIGH);
       activeLed = 0;
       lcd.setCursor(6, 1);
       lcd.print(++score);
       lastLedOff = now;
-      break;
     }
 
     if (MODES[mode] > 0 && now - lastLedOff > (MODES[mode] + NEW_LED_INTERVAL)) {
@@ -190,6 +196,7 @@ void startGame() {
     }
 
     if (timeRemaining <= 0) {
+      flashLed();
       flashLed();
       break;
     }
@@ -201,7 +208,9 @@ void endGame() {
   lcd.print("Again?");
 
   while (1 == 1) {
-    if (button1.isPressed()) {
+    button2.loop();
+
+    if (button2.isPressed()) {
       lcd.setCursor(0, 1);
       lcd.print("                ");
       break;
@@ -210,11 +219,6 @@ void endGame() {
 }
 
 void loop() {
-  button1.loop();
-  button2.loop();
-  button3.loop();
-  button4.loop();
-
   gameMenu();
   startGame();
   endGame();
